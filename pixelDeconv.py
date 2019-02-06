@@ -25,8 +25,8 @@ class pixelDeconv(Layer):
 		axis = (1,2) # height, widtt -> y,x
 		conv0 = K.conv2d(x, self.kernel, padding="same")
 		conv1 = K.conv2d(conv0, self.kernel, padding="same")
-		dilatedConv0 = dilateTensor(conv0.output, axis, 0, 0)
-		dilatedConv1 = dilateTensor(conv1.output, axis, 1, 1)
+		dilatedConv0 = dilateTensor(conv0, axis, 0, 0)
+		dilatedConv1 = dilateTensor(conv1, axis, 1, 1)
 		conv1 = Add([dilatedConv0, dilatedConv1])
 		
 		
@@ -44,10 +44,22 @@ class pixelDeconv(Layer):
 		
 
 def kerasUnstack(tensor, axis):
-	r = K.shape(tensor)[axis]
+	axisLen = K.shape(tensor)[axis]
 	unstackedTensorList = []
-	for i in range(r):
-		unstackedTensorList.append(tensor)
+	for i in range(axisLen):
+		if axis == 0:
+			slice = tensor[i,:,:,:]
+		elif axis == 1:
+			slice = tensor[:,i,:,:]
+		elif axis == 2:
+			slice = tensor[:,:,i,:]
+		elif axis == 3:
+			slice = tensor[:,:,:,i]
+		else:
+			return None
+		
+		unstackedTensorList.append(slice)
+		
 	return unstackedTensorList
 
 def dilateTensor(input, axis, row_shift, column_shift):
